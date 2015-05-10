@@ -25,7 +25,7 @@ Hook up I2C compatible oled to the Raspberry Pi. Pins: SDL and SCL
 ### I2C example
 
 ```javascript
-var Oled = require('oled-js-pi');
+var oled = require('oled-js-pi');
 
 var opts = {
   width: 128,
@@ -33,7 +33,7 @@ var opts = {
   address: 0x3D
 };
 
-var oled = new Oled(opts);
+var oled = new oled(opts);
 
 // do cool oled things here
 
