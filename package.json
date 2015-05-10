@@ -1,11 +1,9 @@
 {
-  "name": "oled-js",
-  "version": "3.0.1",
-  "description": "johnny-five/firmata.js compatible lib for oled devices",
+  "name": "oled-js-pi",
+  "version": "1.0.0",
+  "description": "NodeJS module for controlling oled devices on the Raspbery Pi (including the SSD1306 OLED screens)",
   "main": "oled.js",
-  "dependencies": {
-    "johnny-five": "~0.8.9"
-  },
+  "dependencies": {"i2c": "~0.2.1"},
   "devDependencies": {
     "oled-font-5x7": "~1.0.0",
     "png-to-lcd": "~1.0.2",
@@ -17,17 +15,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/noopkat/johnny-five-oled.git"
+    "url": "https://github.com/kd7yva/oled-js-pi.git"
   },
   "keywords": [
-    "johnny-five",
+    "Raspbery Pi",
+    "Pi",
+    "NodeJS",
     "oled",
-    "firmata"
+    "SSD1306"
   ],
-  "author": "Suz Hinton",
+  "author": ["Judd Flamm", "Suz Hinton"],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/noopkat/johnny-five-oled/issues"
+    "url": "https://github.com/kd7yva/oled-js-pi/issues"
   },
-  "homepage": "https://github.com/noopkat/johnny-five-oled"
+  "homepage": "https://github.com/kd7yva/oled-js-pi"
 }

@@ -1,11 +1,11 @@
-var Oled = function(board, five, opts) {
+var i2c = require('i2c');
+
+var Oled = function(opts) {
 
   this.HEIGHT = opts.height || 32;
   this.WIDTH = opts.width || 128;
   this.ADDRESS = opts.address || 0x3C;
-  this.PROTOCOL = (opts.address) ? 'I2C' : 'SPI';
-  this.MICROVIEW = opts.microview || false;
-  this.SLAVEPIN = opts.slavePin || 12;
+  this.PROTOCOL = 'I2C';
 
   // create command buffers
   this.DISPLAY_OFF = 0xAE;
@@ -46,10 +46,6 @@ var Oled = function(board, five, opts) {
 
   this.dirtyBytes = [];
 
-  // this is necessary as we're not natively sitting within johnny-five lib
-  this.board = board;
-  this.five = five;
-
   var config = {
     '128x32': {
       'multiplex': 0x1F,
@@ -65,45 +61,14 @@ var Oled = function(board, five, opts) {
       'multiplex': 0x0F,
       'compins': 0x2,
       'coloffset': 0,
-    },
-    // this is blended microview / normal 64 x 48, currently wip
-    '64x48': {
-      'multiplex': 0x2F,
-      'compins': 0x12,
-      'coloffset': (this.MICROVIEW) ? 32 : 0
     }
   };
 
-  // microview is wip
-  if (this.MICROVIEW) {
-    // microview spi pins
-    this.SPIconfig = {
-      'dcPin': 8,
-      'ssPin': 10,
-      'rstPin': 7,
-      'clkPin': 13,
-      'mosiPin': 11
-    };
-  } else if (this.PROTOCOL === 'SPI') {
-    // generic spi pins
-    this.SPIconfig = {
-      'dcPin': 11,
-      'ssPin': this.SLAVEPIN,
-      'rstPin': 13,
-      'clkPin': 10,
-      'mosiPin': 9
-    };
-  }
+  // Setup i2c
+  var wire = new i2c(this.ADDRESS, {device: '/dev/i2c-1'}); // point to your i2c address, debug provides REPL interface
 
   var screenSize = this.WIDTH + 'x' + this.HEIGHT;
   this.screenConfig = config[screenSize];
-
-  if (this.PROTOCOL === 'I2C') {
-    // enable i2C in firmata
-    this.board.io.i2cConfig(0);
-  } else {
-    this._setUpSPI();
-  }
 
   this._initialise();
 }
@@ -138,25 +103,8 @@ Oled.prototype._initialise = function() {
   }
 }
 
-Oled.prototype._setUpSPI = function() {
-
-    // set up spi pins
-    this.dcPin = new this.five.Pin(this.SPIconfig.dcPin);
-    this.ssPin = new this.five.Pin(this.SPIconfig.ssPin);
-    this.clkPin = new this.five.Pin(this.SPIconfig.clkPin);
-    this.mosiPin = new this.five.Pin(this.SPIconfig.mosiPin);
-    // reset won't be used as it causes a bunch of default initialisations
-    this.rstPin = new this.five.Pin(this.SPIconfig.rstPin);
-
-    // get the screen out of default mode
-    this.rstPin.low();
-    this.rstPin.high();
-    // Set SS to high so a connected chip will be "deselected" by default
-    this.ssPin.high();
-}
-
 // writes both commands and data buffers to this device
-Oled.prototype._transfer = function(type, val) {
+Oled.prototype._transfer = function(type, val, fn) {
   var control;
   if (type === 'data') {
     control = 0x40;
@@ -166,53 +114,19 @@ Oled.prototype._transfer = function(type, val) {
     return;
   }
 
-  if (this.PROTOCOL === 'I2C') {
-    // send control and actual val
-    this.board.io.i2cWrite(this.ADDRESS, [control, val]);
-  } else {
-    // send val via SPI, no control byte
-    this._writeSPI(val, type);
-  }
-}
-
-Oled.prototype._writeSPI = function(byte, mode) {
-  var bit;
-
-  // set dc to low if command byte, high if data byte
-  if (mode === 'cmd') {
-    this.dcPin.low();
-  } else {
-    this.dcPin.high();
-  }
-
-  // select the device as slave
-  this.ssPin.low();
-
-  for (bit = 7; bit >= 0; bit--) {
-
-    // pull clock low
-    this.clkPin.low();
-
-    // shift out a bit for mosi
-    if (byte & (1 << bit)) {
-      this.mosiPin.high();
-    } else {
-      this.mosiPin.low();
-    }
-
-    // pull clock high to collect bit
-    this.clkPin.high();
-
-  }
-
-  // turn off slave select so other devices can use SPI
-  // don't be an SPI hogging jerk basically
-  this.ssPin.high();
+  // send control and actual val
+  // this.board.io.i2cWrite(this.ADDRESS, [control, val]);
+  wire.writeByte(control, function(err) {
+    wire.writeByte(val, function(err) {
+      fn();
+    });
+  });
 }
 
 // read a byte from the oled
 Oled.prototype._readI2C = function(fn) {
-  this.board.io.i2cReadOnce(this.ADDRESS, 1, function(data) {
+  wire.readByte(function(err, data) {
+    // result is single byte
     fn(data);
   });
 }
@@ -237,11 +151,7 @@ Oled.prototype._waitUntilReady = function(callback) {
     });
   };
 
-  if (this.PROTOCOL === 'I2C') {
-    setTimeout(tick(callback), 0);
-  } else {
-    callback();
-  }
+  setTimeout(tick(callback), 0);
 }
 
 // set starting position of a text string on the oled
