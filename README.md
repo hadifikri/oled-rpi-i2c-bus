@@ -1,130 +1,46 @@
 ![‘npm version’](http://img.shields.io/npm/v/oled-js.svg?style=flat) ![‘downloads over month’](http://img.shields.io/npm/dm/oled-js.svg?style=flat)
 
-oled js
+OLED JS Pi
 ========================
 
 ![oled-cat](http://f.cl.ly/items/2G041X2C1o2A1n2D3S18/cat-oled.png)
 
 ## What is this?
 
-This repo is a library compatible with Rick Waldron's [johnny-five](https://github.com/rwaldron/johnny-five) project. It adds support for I2C/SPI compatible monochrome OLED screens. Works with 128 x 32, 128 x 64 and 96 x 16 sized screens, of the SSD1306 OLED/PLED Controller (read the [datasheet here](http://www.adafruit.com/datasheets/SSD1306.pdf)). 
+A NodeJS driver for I2C/SPI compatible monochrome OLED screens; to be used on the Raspberry Pi! Works with 128 x 32, 128 x 64 and 96 x 16 sized screens, of the SSD1306 OLED/PLED Controller (read the [datasheet here](http://www.adafruit.com/datasheets/SSD1306.pdf)).
 
-Got a [MicroView](https://www.sparkfun.com/products/12923) from GeekAmmo/SparkFun? That'll work too.
+This based on the Blog Post and code by Suz Hinton - [Read her blog post about how OLED screens work](http://meow.noopkat.com/oled-js/)!
 
-Interested in the nerdy bits going on behind the scenes? [Read my blog post about how OLED screens work](http://meow.noopkat.com/oled-js/)!
+OLED screens are really cool - now you can control them with JavaScript!
 
-OLED screens are really cool - now you can control them with JavaScript! 
+## Install
 
-## Install 
+If you haven't already, install [NodeJS](http://nodejs.org/).
 
-If you haven't already, install [NodeJS](http://nodejs.org/) and the [Arduino IDE](http://arduino.cc/en/Main/Software) to your computer.
-
-1. `npm install oled-js`
-2. Upload the Standard Firmata sketch (prepackaged with the Arduino IDE) to your Arduino of choice. This can be found under ``File > Examples > Firmata > StandardFirmata`` [[ further help]](http://arduino.cc/en/Guide/HomePage)
+`npm install oled-js-pi`
 
 ## I2C screens
-Hook up I2C compatible oled to the Arduino. If using an Arduino Uno, pins are as follows:
-
-+ SDL to pin A4
-+ SCL to pin A5 
-
-[Fritzing diagram is here](https://raw.githubusercontent.com/noopkat/johnny-five-oled/master/docs/fritzing/i2C_128x32_Uno.png). Look up the correct pins if using a board other than Arduino.
-
-If you'd like to run the demo:
-
-1. `git clone` this repo (get latest release instead of master branch)
-2. `npm install`
-3. Replace width, height, and other values in the options with your own in tests/demoTime.js
-4. `node tests/demoTime.js`    
+Hook up I2C compatible oled to the Raspberry Pi. Pins: SDL and SCL
 
 ### I2C example
 
 ```javascript
-var five = require('johnny-five'),
-    board = new five.Board(),
-    Oled = require('oled-js');
-    
-board.on('ready', function() {
-  console.log('Connected to Arduino, ready.');
-  
-  var opts = {
-    width: 128,
-    height: 64, 
-    address: 0x3D
-  };
+var Oled = require('oled-js-pi');
 
-  var oled = new Oled(board, five, opts);
-  // do cool oled things here
-});
-    
+var opts = {
+  width: 128,
+  height: 64,
+  address: 0x3D
+};
+
+var oled = new Oled(opts);
+
+// do cool oled things here
+
 ```
 
 ### Wait, how do I find out the I2C address of my OLED screen?
-Yeah this sounds like a nightmare, but it's pretty simple! Before uploading standard firmata to your Arduino, upload the [following sketch](http://playground.arduino.cc/Main/I2cScanner) from the Arduino Playground called 'I2C scanner'. Does what it says on the box. Open up your serial monitor, and you'll see your device address pop up there. Make a note of it, then re-upload standard firmata to your Arduino again.
-
-## SPI screens
-
-**IMPORTANT NOTE: Using SPI will make your screen update and draw VERY slow. Manual hardware SPI over USB is the only way currently to do this within Johnny-Five, which is not optimized for the normal speed you can expect from SPI in general. Sorry about that. [Here is a video I took to show this](https://www.youtube.com/watch?v=wHCxlYx2bZY).**
-
-Hook up SPI compatible oled to the Arduino. If using an Arduino Uno, pins are as follows:
-
-+ Data/MOSI to pin D9
-+ CLK to pin D10
-+ D/C to pin D11
-+ RST to pin D13
-+ CS/SS to pin 12 (you can change this one if you really want to)
-
-Fritzing diagram coming soon.
-
-#### SPI example
-
-```javascript
-var five = require('johnny-five'),
-    board = new five.Board(),
-    Oled = require('oled-js');
-    
-board.on('ready', function() {
-  console.log('Connected to Arduino, ready.');
-
-  var opts = {
-    width: 128,
-    height: 64, 
-    slavePin: 12
-  };
-  
-  var oled = new Oled(board, five, opts);
-  // do cool oled things here
-});
-    
-```
-
-## MicroView
-
-**MicroView uses SPI, so please see the note about drawing speed in the SPI section above.**
-
-This one is pretty simple - use the USB programmer that should have come with your MicroView. Insert the MicroView's header pins into the slots on the USB programmer. Plug it in to your nearest USB port, and you're done! No pin mappings, no sweat.
-
-### Microview example
-
-```javascript
-var five = require('johnny-five'),
-    board = new five.Board(),
-    Oled = require('oled-js');
-    
-board.on('ready', function() {
-  console.log('Connected to Arduino, ready.');
-
-  var opts = {
-    width: 64,
-    height: 48, 
-    microview: true
-  };
-  
-  var oled = new Oled(board, five, opts);
-  // do cool oled things here
-});
-    
-```
+Check your screen's documentation...
 
 ## Available methods
 
@@ -137,7 +53,7 @@ oled.clearDisplay();
 ```
 
 ### dimDisplay
-Lowers the contrast on the display. This method takes one argument, a boolean. True for dimming, false to restore normal contrast. 
+Lowers the contrast on the display. This method takes one argument, a boolean. True for dimming, false to restore normal contrast.
 
 Usage:
 ```javascript
@@ -145,7 +61,7 @@ oled.dimDisplay(true|false);
 ```
 
 ### invertDisplay
-Inverts the pixels on the display. Black becomes white, white becomes black. This method takes one argument, a boolean. True for inverted state, false to restore normal pixel colors. 
+Inverts the pixels on the display. Black becomes white, white becomes black. This method takes one argument, a boolean. True for inverted state, false to restore normal pixel colors.
 
 Usage:
 ```javascript
@@ -153,7 +69,7 @@ oled.invertDisplay(true|false);
 ```
 
 ### turnOffDisplay
-Turns the display off. 
+Turns the display off.
 
 Usage:
 ```javascript
@@ -161,7 +77,7 @@ oled.turnOffDisplay();
 ```
 
 ### turnOnDisplay
-Turns the display on. 
+Turns the display on.
 
 Usage:
 ```javascript
@@ -170,7 +86,7 @@ oled.turnOnDisplay();
 
 
 ### drawPixel
-Draws a pixel at a specified position on the display. This method takes one argument: a multi-dimensional array containing either one or more sets of pixels. 
+Draws a pixel at a specified position on the display. This method takes one argument: a multi-dimensional array containing either one or more sets of pixels.
 
 Each pixel needs an x position, a y position, and a color. Colors can be specified as either 0 for 'off' or black, and 1 or 255 for 'on' or white.
 
@@ -201,7 +117,7 @@ Optional bool as last argument specifies whether screen updates immediately with
 Usage:
 ```javascript
 // args: (x0, y0, x1, y1, color)
-oled.drawLine(1, 1, 128, 32, 1); 
+oled.drawLine(1, 1, 128, 32, 1);
 ```
 
 ### fillRect
@@ -323,7 +239,3 @@ Usage:
 ```javascript
 oled.update();
 ```
-
-## Future
-+ better documentation
-+ 16-bit color oled support
