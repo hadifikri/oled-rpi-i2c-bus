@@ -17,7 +17,7 @@ OLED screens are really cool - now you can control them with JavaScript!
 
 If you haven't already, install [NodeJS](http://nodejs.org/).
 
-`npm install oled-js-pi`
+`npm install oled-i2c-bus`
 
 ## I2C screens
 Hook up I2C compatible oled to the Raspberry Pi. Pins: SDL and SCL
@@ -25,7 +25,9 @@ Hook up I2C compatible oled to the Raspberry Pi. Pins: SDL and SCL
 ### I2C example
 
 ```javascript
-var oled = require('oled-js-pi');
+var i2c = require('i2c-bus'),
+  i2cBus = i2c.openSync(1),
+  oled = require('oled-i2c-bus');
 
 var opts = {
   width: 128,
@@ -33,7 +35,7 @@ var opts = {
   address: 0x3D
 };
 
-var oled = new oled(opts);
+var oled = new oled(i2cBus, opts);
 
 // do cool oled things here
 
