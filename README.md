@@ -3,9 +3,9 @@
 OLED JS Pi
 ========================
 
-![oled-cat](http://f.cl.ly/items/2G041X2C1o2A1n2D3S18/cat-oled.png)
-
 ## What is this?
+
+This is fork of package [`oled-js-pi`](https://github.com/kd7yva/oled-js-pi) that works thru `i2c-bus` package and not use package `i2c`.
 
 A NodeJS driver for I2C/SPI compatible monochrome OLED screens; to be used on the Raspberry Pi! Works with 128 x 32, 128 x 64 and 96 x 16 sized screens, of the SSD1306 OLED/PLED Controller (read the [datasheet here](http://www.adafruit.com/datasheets/SSD1306.pdf)).
 
