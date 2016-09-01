@@ -1,6 +1,6 @@
 ![‘npm version’](http://img.shields.io/npm/v/oled-js.svg?style=flat) ![‘downloads over month’](http://img.shields.io/npm/dm/oled-js.svg?style=flat)
 
-OLED JS Pi
+OLED JS Pi over i2c-bus
 ========================
 
 ## What is this?
