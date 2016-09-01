@@ -116,15 +116,16 @@ Oled.prototype._transfer = function(type, val, fn) {
   // send control and actual val
   // this.board.io.i2cWrite(this.ADDRESS, [control, val]);
   this.wire.i2cWrite(this.ADDRESS, 2, new Buffer([control, val]), function(err) {
-    //this.wire.i2cWrite(val, function(err) {
-    fn();
-    //});
+    //TODO: why fn is undefined?
+    if(fn) {
+      fn();
+    }
   });
 }
 
 // read a byte from the oled
 Oled.prototype._readI2C = function(fn) {
-  this.wire.i2cRead(this.ADDRESS, new Buffer(), 0, function(err, bytesRead, data) {
+  this.wire.i2cRead(this.ADDRESS, 0, new Buffer([0]), function(err, bytesRead, data) {
     // result is single byte
     fn(data[0]);
   });
