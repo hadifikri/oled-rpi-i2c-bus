@@ -151,7 +151,7 @@ Oled.prototype._waitUntilReady = function(callback) {
     });
   };
 
-  setTimeout(tick(callback), 0);
+  setTimeout(function () { tick(callback) }, 0);
 }
 
 // set starting position of a text string on the oled
