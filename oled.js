@@ -39,7 +39,7 @@ var Oled = function(i2c, opts) {
   this.cursor_y = 0;
 
   // new blank buffer
-  this.buffer = new Buffer((this.WIDTH * this.HEIGHT) / 8);
+  this.buffer = Buffer.alloc((this.WIDTH * this.HEIGHT) / 8);
   this.buffer.fill(0x00);
 
   this.dirtyBytes = [];
@@ -63,7 +63,7 @@ var Oled = function(i2c, opts) {
   };
 
   // Setup i2c
-  console.log('this.ADDRESS: ' + this.ADDRESS);
+  //console.log('this.ADDRESS: ' + this.ADDRESS);
   this.wire = i2c;
 
   var screenSize = this.WIDTH + 'x' + this.HEIGHT;
@@ -115,8 +115,9 @@ Oled.prototype._transfer = function(type, val, fn) {
 
   // send control and actual val
   // this.board.io.i2cWrite(this.ADDRESS, [control, val]);
-  this.wire.i2cWrite(this.ADDRESS, 2, new Buffer([control, val]), function(err) {
-    //TODO: why fn is undefined?
+  this.wire.i2cWrite(this.ADDRESS, 2, Buffer.from([control, val]), function(err) {
+    // Q: why fn is undefined?
+    // A: because _transfer() is called with 2 arguments
     if(fn) {
       fn();
     }
@@ -125,10 +126,9 @@ Oled.prototype._transfer = function(type, val, fn) {
 
 // read a byte from the oled
 Oled.prototype._readI2C = function(fn) {
-  this.wire.i2cRead(this.ADDRESS, 0, new Buffer([0]), function(err, bytesRead, data) {
-    // result is single byte
-    fn(data[0]);
-  });
+  var data=[0];
+  this.wire.i2cReadSync(this.ADDRESS, 1, Buffer.from(data));
+  fn(data[0]);
 }
 
 // sometimes the oled gets a bit busy with lots of bytes.
@@ -145,13 +145,12 @@ Oled.prototype._waitUntilReady = function(callback) {
         // if not busy, it's ready for callback
         callback();
       } else {
-        console.log('I\'m busy!');
         setTimeout(tick, 0);
       }
     });
   };
 
-  setTimeout(function () { tick(callback) }, 0);
+  setTimeout(function(){tick(callback)}, 0);
 }
 
 // set starting position of a text string on the oled
