@@ -1,8 +1,16 @@
+/*
+ * clock.js
+ * Display a digital clock on a small I2C connected display
+ * 
+ * 2016-11-28 v1.0 Harald Kubota
+ */
+
+
 "use strict";
 
 var i2c = require('i2c-bus'),
-  i2cBus = i2c.openSync(0),
-  oled = require('oled-i2c-bus');
+    i2cBus = i2c.openSync(0),
+    oled = require('oled-i2c-bus');
 
 const SIZE_X=128,
       SIZE_Y=64;
@@ -25,6 +33,7 @@ oled.drawPixel([
     [0, SIZE_Y-1, 1],
     [0, 0, 1]
 ]);
+
 oled.drawLine(1, 1, SIZE_X-2, 1, 1);
 oled.drawLine(SIZE_X-2, 1, SIZE_X-2, SIZE_Y-2, 1);
 oled.drawLine(SIZE_X-2, SIZE_Y-2, 1, SIZE_Y-2, 1);
@@ -51,7 +60,7 @@ function displayClock() {
 
   // Location fits 128x64 OLED
   oled.setCursor(12, 25);
-  oled.writeString(font, 2, hour+":"+min+":"+sec, 1), true;
+  oled.writeString(font, 2, hour+":"+min+":"+sec, 1, true);
 }
 
 setInterval(displayClock, 1000);
