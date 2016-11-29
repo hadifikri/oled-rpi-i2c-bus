@@ -39,9 +39,11 @@ var Oled = function(i2c, opts) {
   this.cursor_y = 0;
 
   // new blank buffer
+  //For version <6.0.0
   if(typeof Buffer.alloc == "undefined") {
     this.buffer = new Buffer((this.WIDTH * this.HEIGHT) / 8);
   }
+  //For version >=6.0.0
   else {
     this.buffer = Buffer.alloc((this.WIDTH * this.HEIGHT) / 8);
   }
@@ -119,9 +121,11 @@ Oled.prototype._transfer = function(type, val, fn) {
   }
 
   var bufferForSend;
+  //For version <6.0.0
   if(typeof Buffer.from == "undefined") {
     bufferForSend = new Buffer([control, val]);
   }
+  //For version >=6.0.0
   else {
     bufferForSend = Buffer.from([control, val])
   }
@@ -139,13 +143,19 @@ Oled.prototype._transfer = function(type, val, fn) {
 
 // read a byte from the oled
 Oled.prototype._readI2C = function(fn) {
-
+  //For version <6.0.0
   if(typeof Buffer.from == "undefined") {
     this.wire.i2cRead(this.ADDRESS, 0, new Buffer([0]), function(err, bytesRead, data) {
       // result is single byte
-      fn(data[0]);
+      if(typeof data === "object") {
+        fn(data[0]);
+      }
+      else {
+        fn(0);
+      }
     });
   }
+  //For version >=6.0.0
   else {
     var data=[0];
     this.wire.i2cReadSync(this.ADDRESS, 1, Buffer.from(data));
