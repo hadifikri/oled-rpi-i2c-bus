@@ -1,6 +1,6 @@
 {
   "name": "oled-i2c-bus",
-  "version": "1.0.6",
+  "version": "1.0.9",
   "description": "NodeJS module for controlling oled devices on the Raspbery Pi (including the SSD1306 OLED screens)",
   "main": "oled.js",
   "devDependencies": {
