@@ -177,7 +177,7 @@ Oled.prototype._waitUntilReady = function(callback) {
         // if not busy, it's ready for callback
         callback();
       } else {
-        setTimeout(tick, 0);
+        setTimeout(function () {tick(callback) }, 0);
       }
     });
   };
@@ -202,8 +202,10 @@ Oled.prototype.writeString = function(font, size, string, color, wrap, sync) {
 
   // loop through words
   for (var w = 0; w < len; w += 1) {
-    // put the word space back in
-    wordArr[w] += ' ';
+    // put the word space back in for all in between words or empty words
+    if (w < len - 1 || !wordArr[w].length) {
+      wordArr[w] += ' ';
+    }
     var stringArr = wordArr[w].split(''),
         slen = stringArr.length,
         compare = (font.width * size * slen) + (size * (len -1));
