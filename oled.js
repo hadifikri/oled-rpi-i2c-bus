@@ -4,6 +4,8 @@ var Oled = function(i2c, opts) {
   this.WIDTH = opts.width || 128;
   this.ADDRESS = opts.address || 0x3C;
   this.PROTOCOL = 'I2C';
+  this.LINESPACING = typeof opts.linespacing !== 'undefined' ? opts.linespacing : 1;
+  this.LETTERSPACING = typeof opts.letterspacing !== 'undefined' ? opts.letterspacing : 1;
 
   // create command buffers
   this.DISPLAY_OFF = 0xAE;
@@ -198,7 +200,7 @@ Oled.prototype.writeString = function(font, size, string, color, wrap, sync) {
       len = wordArr.length,
       // start x offset at cursor pos
       offset = this.cursor_x,
-      padding = 0, letspace = 1, leading = 2;
+      padding = 0;
 
   // loop through words
   for (var w = 0; w < len; w += 1) {
@@ -212,31 +214,38 @@ Oled.prototype.writeString = function(font, size, string, color, wrap, sync) {
 
     // wrap words if necessary
     if (wrap && len > 1 && (offset >= (this.WIDTH - compare)) ) {
-      offset = 1;
-      this.cursor_y += (font.height * size) + size + leading;
+      offset = 0;
+
+      this.cursor_y += (font.height * size) + this.LINESPACING;
       this.setCursor(offset, this.cursor_y);
     }
 
     // loop through the array of each char to draw
     for (var i = 0; i < slen; i += 1) {
-      // look up the position of the char, pull out the buffer slice
-      var charBuf = this._findCharBuf(font, stringArr[i]);
-      // read the bits in the bytes that make up the char
-      var charBytes = this._readCharBytes(charBuf);
-      // draw the entire character
-      this._drawChar(charBytes, size, false);
-
-      // calc new x position for the next char, add a touch of padding too if it's a non space char
-      padding = (stringArr[i] === ' ') ? 0 : size + letspace;
-      offset += (font.width * size) + padding;
-
-      // wrap letters if necessary
-      if (wrap && (offset >= (this.WIDTH - font.width - letspace))) {
-        offset = 1;
-        this.cursor_y += (font.height * size) + size + leading;
+      if (stringArr[i] === '\n') {
+        offset = 0;
+        this.cursor_y += (font.height * size) + this.LINESPACING;
       }
-      // set the 'cursor' for the next char to be drawn, then loop again for next char
-      this.setCursor(offset, this.cursor_y);
+      else {
+        // look up the position of the char, pull out the buffer slice
+        var charBuf = this._findCharBuf(font, stringArr[i]);
+        // read the bits in the bytes that make up the char
+        var charBytes = this._readCharBytes(charBuf);
+        // draw the entire character
+        this._drawChar(charBytes, size, false);
+
+        // calc new x position for the next char, add a touch of padding too if it's a non space char
+        //padding = (stringArr[i] === ' ') ? 0 : this.LETTERSPACING;
+        offset += (font.width * size) + this.LETTERSPACING;// padding;
+
+        // wrap letters if necessary
+        if (wrap && (offset >= (this.WIDTH - font.width - this.LETTERSPACING))) {
+          offset = 0;
+          this.cursor_y += (font.height * size) + this.LINESPACING;
+        }
+        // set the 'cursor' for the next char to be drawn, then loop again for next char
+        this.setCursor(offset, this.cursor_y);
+      }
     }
   }
   if (immed) {
