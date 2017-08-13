@@ -122,7 +122,7 @@ Oled.prototype._transfer = function(type, val, fn) {
     return;
   }
 
-  var bufferForSend;
+  var bufferForSend, sentCount;
   //For version <6.0.0
   if(typeof Buffer.from == "undefined") {
     bufferForSend = new Buffer([control, val]);
@@ -133,14 +133,10 @@ Oled.prototype._transfer = function(type, val, fn) {
   }
 
   // send control and actual val
-  // this.board.io.i2cWrite(this.ADDRESS, [control, val]);
-  this.wire.i2cWrite(this.ADDRESS, 2, bufferForSend, function(err) {
-    // Q: why fn is undefined?
-    // A: because _transfer() is called with 2 arguments
-    if(fn) {
-      fn();
-    }
-  });
+  sentCount = this.wire.i2cWriteSync(this.ADDRESS, 2, bufferForSend);
+  if(fn) {
+    fn();
+  }
 }
 
 // read a byte from the oled
@@ -225,6 +221,7 @@ Oled.prototype.writeString = function(font, size, string, color, wrap, sync) {
       if (stringArr[i] === '\n') {
         offset = 0;
         this.cursor_y += (font.height * size) + this.LINESPACING;
+        this.setCursor(offset, this.cursor_y);
       }
       else {
         // look up the position of the char, pull out the buffer slice
@@ -419,7 +416,7 @@ Oled.prototype.drawPixel = function(pixels, sync) {
   pixels.forEach(function(el) {
     // return if the pixel is out of range
     var x = el[0], y = el[1], color = el[2];
-    if (x > this.WIDTH || y > this.HEIGHT) return;
+    if (x >= this.WIDTH || y >= this.HEIGHT) return;
 
     // thanks, Martin Richards.
     // I wanna can this, this tool is for devs who get 0 indexes
