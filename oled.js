@@ -4,6 +4,8 @@ var Oled = function(i2c, opts) {
   this.WIDTH = opts.width || 128;
   this.ADDRESS = opts.address || 0x3C;
   this.PROTOCOL = 'I2C';
+  this.LINESPACING = typeof opts.linespacing !== 'undefined' ? opts.linespacing : 1;
+  this.LETTERSPACING = typeof opts.letterspacing !== 'undefined' ? opts.letterspacing : 1;
 
   // create command buffers
   this.DISPLAY_OFF = 0xAE;
@@ -120,7 +122,7 @@ Oled.prototype._transfer = function(type, val, fn) {
     return;
   }
 
-  var bufferForSend;
+  var bufferForSend, sentCount;
   //For version <6.0.0
   if(typeof Buffer.from == "undefined") {
     bufferForSend = new Buffer([control, val]);
@@ -131,14 +133,10 @@ Oled.prototype._transfer = function(type, val, fn) {
   }
 
   // send control and actual val
-  // this.board.io.i2cWrite(this.ADDRESS, [control, val]);
-  this.wire.i2cWrite(this.ADDRESS, 2, bufferForSend, function(err) {
-    // Q: why fn is undefined?
-    // A: because _transfer() is called with 2 arguments
-    if(fn) {
-      fn();
-    }
-  });
+  sentCount = this.wire.i2cWriteSync(this.ADDRESS, 2, bufferForSend);
+  if(fn) {
+    fn();
+  }
 }
 
 // read a byte from the oled
@@ -177,7 +175,7 @@ Oled.prototype._waitUntilReady = function(callback) {
         // if not busy, it's ready for callback
         callback();
       } else {
-        setTimeout(tick, 0);
+        setTimeout(function () {tick(callback) }, 0);
       }
     });
   };
@@ -198,43 +196,53 @@ Oled.prototype.writeString = function(font, size, string, color, wrap, sync) {
       len = wordArr.length,
       // start x offset at cursor pos
       offset = this.cursor_x,
-      padding = 0, letspace = 1, leading = 2;
+      padding = 0;
 
   // loop through words
   for (var w = 0; w < len; w += 1) {
-    // put the word space back in
-    wordArr[w] += ' ';
+    // put the word space back in for all in between words or empty words
+    if (w < len - 1 || !wordArr[w].length) {
+      wordArr[w] += ' ';
+    }
     var stringArr = wordArr[w].split(''),
         slen = stringArr.length,
         compare = (font.width * size * slen) + (size * (len -1));
 
     // wrap words if necessary
     if (wrap && len > 1 && (offset >= (this.WIDTH - compare)) ) {
-      offset = 1;
-      this.cursor_y += (font.height * size) + size + leading;
+      offset = 0;
+
+      this.cursor_y += (font.height * size) + this.LINESPACING;
       this.setCursor(offset, this.cursor_y);
     }
 
     // loop through the array of each char to draw
     for (var i = 0; i < slen; i += 1) {
-      // look up the position of the char, pull out the buffer slice
-      var charBuf = this._findCharBuf(font, stringArr[i]);
-      // read the bits in the bytes that make up the char
-      var charBytes = this._readCharBytes(charBuf);
-      // draw the entire character
-      this._drawChar(charBytes, size, false);
-
-      // calc new x position for the next char, add a touch of padding too if it's a non space char
-      padding = (stringArr[i] === ' ') ? 0 : size + letspace;
-      offset += (font.width * size) + padding;
-
-      // wrap letters if necessary
-      if (wrap && (offset >= (this.WIDTH - font.width - letspace))) {
-        offset = 1;
-        this.cursor_y += (font.height * size) + size + leading;
+      if (stringArr[i] === '\n') {
+        offset = 0;
+        this.cursor_y += (font.height * size) + this.LINESPACING;
+        this.setCursor(offset, this.cursor_y);
       }
-      // set the 'cursor' for the next char to be drawn, then loop again for next char
-      this.setCursor(offset, this.cursor_y);
+      else {
+        // look up the position of the char, pull out the buffer slice
+        var charBuf = this._findCharBuf(font, stringArr[i]);
+        // read the bits in the bytes that make up the char
+        var charBytes = this._readCharBytes(charBuf);
+        // draw the entire character
+        this._drawChar(charBytes, size, false);
+
+        // calc new x position for the next char, add a touch of padding too if it's a non space char
+        //padding = (stringArr[i] === ' ') ? 0 : this.LETTERSPACING;
+        offset += (font.width * size) + this.LETTERSPACING;// padding;
+
+        // wrap letters if necessary
+        if (wrap && (offset >= (this.WIDTH - font.width - this.LETTERSPACING))) {
+          offset = 0;
+          this.cursor_y += (font.height * size) + this.LINESPACING;
+        }
+        // set the 'cursor' for the next char to be drawn, then loop again for next char
+        this.setCursor(offset, this.cursor_y);
+      }
     }
   }
   if (immed) {
@@ -408,7 +416,7 @@ Oled.prototype.drawPixel = function(pixels, sync) {
   pixels.forEach(function(el) {
     // return if the pixel is out of range
     var x = el[0], y = el[1], color = el[2];
-    if (x > this.WIDTH || y > this.HEIGHT) return;
+    if (x >= this.WIDTH || y >= this.HEIGHT) return;
 
     // thanks, Martin Richards.
     // I wanna can this, this tool is for devs who get 0 indexes
