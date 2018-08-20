@@ -19,6 +19,7 @@
   "dependencies": {
     "i2c-bus": "^1.1.2",
     "oled-font-5x7": "^1.0.0",
-    "oled-i2c-bus": "^1.0.8"
+    "oled-i2c-bus": "^1.0.11",
+    "pngjs": "^3.3.3"
   }
 }
