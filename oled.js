@@ -380,6 +380,71 @@ Oled.prototype.invertDisplay = function(bool) {
   }
 }
 
+// draw an RGBA image at the specified coordinates
+Oled.prototype.drawRGBAImage = function(image, dx, dy, sync) {
+  var immed = (typeof sync === 'undefined') ? true : sync;
+  // translate image data to buffer
+  var x, y, dataIndex, buffIndex, buffByte, bit, pixelByte;
+  var dyp = this.WIDTH * Math.floor(dy / 8); // calc once
+  var dxyp = dyp + dx;
+  for (x = 0; x < image.width; x++) {
+    var dxx = dx + x;
+    if (dxx < 0 || dxx >= this.WIDTH) {
+      // negative, off the screen
+      continue;
+    }
+    // start buffer index for image column
+    buffIndex = x + dxyp;
+    buffByte = this.buffer[buffIndex];
+    for (y = 0; y < image.height; y++) {
+      var dyy = dy + y; // calc once
+      if (dyy < 0 || dyy >= this.HEIGHT) {
+        // negative, off the screen
+        continue;
+      }
+      var dyyp = Math.floor(dyy / 8); // calc once
+
+      // check if start of buffer page
+      if (!(dyy % 8)) {
+        // check if we need to save previous byte
+        if ((x || y) && buffByte !== this.buffer[buffIndex]) {
+          // save current byte and get next buffer byte
+          this.buffer[buffIndex] = buffByte;
+          this.dirtyBytes.push(buffIndex);
+        }
+        // new buffer page
+        buffIndex = dx + x + this.WIDTH * dyyp;
+        buffByte = this.buffer[buffIndex];
+      }
+
+      // process pixel into buffer byte
+      dataIndex = (image.width * y + x) << 2; // 4 bytes per pixel (RGBA)
+      if (!image.data[dataIndex + 3]) {
+        // transparent, continue to next pixel
+        continue;
+      }
+
+      pixelByte = 0x01 << (dyy - 8 * dyyp);
+      bit = image.data[dataIndex] || image.data[dataIndex + 1] || image.data[dataIndex + 2];
+      if (bit) {
+        buffByte |= pixelByte;
+      }
+      else {
+        buffByte &= ~pixelByte;
+      }
+    }
+    if ((x || y) && buffByte !== this.buffer[buffIndex]) {
+      // save current byte
+      this.buffer[buffIndex] = buffByte;
+      this.dirtyBytes.push(buffIndex);
+    }
+  }
+
+  if (immed) {
+    this._updateDirtyBytes(this.dirtyBytes);
+  }
+}
+
 // draw an image pixel array on the screen
 Oled.prototype.drawBitmap = function(pixels, sync) {
   var immed = (typeof sync === 'undefined') ? true : sync;

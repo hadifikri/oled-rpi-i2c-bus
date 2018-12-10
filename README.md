@@ -174,6 +174,48 @@ pngtolcd('nyan-cat.png', true, function(err, bitmap) {
 });
 ```
 
+### drawRGBAImage
+Draw an RGBA coded image at specific coordinates. This only supports a monochrome
+OLED so transparent pixels must be 100% transparent, off pixels should have an
+RGB value of (0, 0, 0), and pixels with any color value will be considered on.
+
+Use a library such as [pngjs](https://www.npmjs.com/package/pngjs) to read a png
+file into the required rgba data structure.
+
+Example:
+```JavaScript
+const fs = require('fs');
+const PNG = require('pngjs').PNG;
+const i2c = require('i2c-bus');
+const oled = require('oled-i2c-bus');
+
+var i2cBus = i2c.openSync(0);
+
+var opts = {
+  width: 128,
+  height: 64,
+  address: 0x3C
+};
+
+var display = new oled(i2cBus, opts);
+
+display.clearDisplay();
+display.turnOnDisplay();
+
+fs.createReadStream('./test.png')
+.pipe(new PNG({ filterType: 4 }))
+.on('parsed', function () {
+  setInterval(() => { drawImage(this) }, 1000);
+});
+
+function drawImage(image) {
+  let x = Math.floor(Math.random() * (display.WIDTH) - image.width / 2);
+  let y = Math.floor(Math.random() * (display.HEIGHT) - image.height / 2);
+  display.drawRGBAImage(image, x, y);
+}
+```
+
+
 ### startScroll
 Scrolls the current display either left or right.
 Arguments:
