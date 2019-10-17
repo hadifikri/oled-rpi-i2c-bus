@@ -8,8 +8,13 @@
 
 "use strict";
 
+// NOTE: On newer versions of Raspberry Pi the I2C is set to 1,
+// however on other platforms you may need to adjust if to
+// another value, for example 0.
+var bus = 1;
+
 var i2c = require('i2c-bus'),
-    i2cBus = i2c.openSync(0),
+    i2cBus = i2c.openSync(bus),
     oled = require('oled-i2c-bus');
 
 const SIZE_X=128,
@@ -21,23 +26,30 @@ var opts = {
   address: 0x3C
 };
 
-var oled = new oled(i2cBus, opts);
 
+try {
+  var oled = new oled(i2cBus, opts);
 
-oled.clearDisplay();
-oled.turnOnDisplay();
+  oled.clearDisplay();
+  oled.turnOnDisplay();
 
-oled.drawPixel([
+  oled.drawPixel([
     [SIZE_X-1, 0, 1],
     [SIZE_X-1, SIZE_Y-1, 1],
     [0, SIZE_Y-1, 1],
     [0, 0, 1]
-]);
+  ]);
 
-oled.drawLine(1, 1, SIZE_X-2, 1, 1);
-oled.drawLine(SIZE_X-2, 1, SIZE_X-2, SIZE_Y-2, 1);
-oled.drawLine(SIZE_X-2, SIZE_Y-2, 1, SIZE_Y-2, 1);
-oled.drawLine(1, SIZE_Y-2, 1, 1, 1);
+  oled.drawLine(1, 1, SIZE_X-2, 1, 1);
+  oled.drawLine(SIZE_X-2, 1, SIZE_X-2, SIZE_Y-2, 1);
+  oled.drawLine(SIZE_X-2, SIZE_Y-2, 1, SIZE_Y-2, 1);
+  oled.drawLine(1, SIZE_Y-2, 1, 1, 1);
+}
+catch(err) {
+  // Print an error message and terminate the application
+  console.log(err.message);
+  process.exit(1);
+}
 
 var font = require('oled-font-5x7');
 
