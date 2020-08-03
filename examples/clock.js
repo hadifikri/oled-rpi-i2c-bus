@@ -70,8 +70,7 @@ function displayClock() {
   var day  = date.getDate();
   day = (day < 10 ? "0" : "") + day;
 
-  // Location fits 128x64 OLED
-  oled.setCursor(12, 25);
+  oled.setCursor(12, Math.floor(SIZE_Y/2) + 7);
   oled.writeString(font, 2, hour+":"+min+":"+sec, 1, true);
 }
 
