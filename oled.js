@@ -209,7 +209,7 @@ Oled.prototype.writeString = function(font, size, string, color, wrap, sync) {
         compare = (font.width * size * slen) + (size * (len -1));
 
     // wrap words if necessary
-    if (wrap && len > 1 && (offset >= (this.WIDTH - compare)) ) {
+    if (wrap && len > 1 && w > 0 && (offset >= (this.WIDTH - compare)) ) {
       offset = 0;
 
       this.cursor_y += (font.height * size) + this.LINESPACING;
@@ -227,9 +227,9 @@ Oled.prototype.writeString = function(font, size, string, color, wrap, sync) {
         // look up the position of the char, pull out the buffer slice
         var charBuf = this._findCharBuf(font, stringArr[i]);
         // read the bits in the bytes that make up the char
-        var charBytes = this._readCharBytes(charBuf);
+        var charBytes = this._readCharBytes(charBuf, font.height);
         // draw the entire character
-        this._drawChar(charBytes, size, false);
+        this._drawChar(charBytes, font.height, size, false);
 
         // calc new x position for the next char, add a touch of padding too if it's a non space char
         //padding = (stringArr[i] === ' ') ? 0 : this.LETTERSPACING;
@@ -251,14 +251,14 @@ Oled.prototype.writeString = function(font, size, string, color, wrap, sync) {
 }
 
 // draw an individual character to the screen
-Oled.prototype._drawChar = function(byteArray, size, sync) {
+Oled.prototype._drawChar = function(byteArray, charHeight, size, sync) {
   // take your positions...
   var x = this.cursor_x,
       y = this.cursor_y;
 
   // loop through the byte array containing the hexes for the char
   for (var i = 0; i < byteArray.length; i += 1) {
-    for (var j = 0; j < 8; j += 1) {
+    for (var j = 0; j < charHeight; j += 1) {
       // pull color out
       var color = byteArray[i][j],
           xpos, ypos;
@@ -278,7 +278,7 @@ Oled.prototype._drawChar = function(byteArray, size, sync) {
 }
 
 // get character bytes from the supplied font object in order to send to framebuffer
-Oled.prototype._readCharBytes = function(byteArray) {
+Oled.prototype._readCharBytes = function(byteArray, charHeight) {
   var bitArr = [],
       bitCharArr = [];
   // loop through each byte supplied for a char
@@ -286,7 +286,7 @@ Oled.prototype._readCharBytes = function(byteArray) {
     // set current byte
     var byte = byteArray[i];
     // read each byte
-    for (var j = 0; j < 8; j += 1) {
+    for (var j = 0; j < charHeight; j += 1) {
       // shift bits right until all are read
       var bit = byte >> j & 1;
       bitArr.push(bit);
