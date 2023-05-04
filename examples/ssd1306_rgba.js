@@ -13,16 +13,16 @@ const PNG = require('pngjs').PNG;
 const i2c = require('i2c-bus');
 const oled = require('../oled');// 'oled-i2c-bus');
 
-var i2cBus = i2c.openSync(0);
-
 var opts = {
   width: 128,
   height: 64,
-  address: 0x3C
+  address: 0x3C,
+  bus:1,
+  driver: 'SSD1306'
 };
 
+var i2cBus = i2c.openSync(opts.bus);
 var display = new oled(i2cBus, opts);
-
 display.clearDisplay();
 display.turnOnDisplay();
 
