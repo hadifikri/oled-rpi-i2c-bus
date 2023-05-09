@@ -1,6 +1,6 @@
 {
-  "name": "oled-i2c-bus",
-  "version": "1.1.0",
+  "name": "oled-rpi-i2c-bus",
+  "version": "1.1.4",
   "description": "NodeJS module for controlling oled devices on the Raspbery Pi (including the SSD1306 and SH1106 OLED screens)",
   "main": "oled.js",
   "devDependencies": {
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/baltazorr/oled-i2c-bus.git"
+    "url": "https://github.com/hadifikri/oled-rpi-i2c-bus.git"
   },
   "keywords": [
     "Raspbery Pi",
@@ -32,9 +32,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kd7yva/oled-i2c-bus/issues"
+    "url": "https://github.com/hadifikri/oled-rpi-i2c-bus/issues"
   },
-  "homepage": "https://github.com/baltazorr/oled-i2c-bus",
+  "homepage": "https://github.com/hadifikri/oled-rpi-i2c-bus",
   "dependencies": {
     "i2c-bus": "^5.2.2",
     "pngjs": "^3.3.3"
