@@ -1,7 +1,7 @@
 {
   "name": "examples",
   "version": "1.0.0",
-  "description": "Testing OLED SSD1306 and SH1106 display with nodeJS",
+  "description": "Testing OLED SSD1306 display with nodeJS",
   "main": "clock.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

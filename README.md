@@ -7,7 +7,7 @@ OLED JS Pi over i2c-bus
 
 This is fork of package [`oled-js-pi`](https://github.com/kd7yva/oled-js-pi) that works thru `i2c-bus` package and not use package `i2c`.
 
-A NodeJS driver for I2C/SPI compatible monochrome OLED screens; to be used on the Raspberry Pi! Works with 128 x 32, 128 x 64 and 96 x 16 sized screens, of the SSD1306 OLED/PLED Controller (read the [datasheet here](http://www.adafruit.com/datasheets/SSD1306.pdf)).
+A NodeJS driver for I2C/SPI compatible monochrome OLED screens; to be used on the Raspberry Pi! Works with 128 x 32, 128 x 64 and 96 x 16 sized screens, of the SSD1306/SH1106 OLED/PLED Controller (read the [datasheet here](http://www.adafruit.com/datasheets/SSD1306.pdf)).
 
 This based on the Blog Post and code by Suz Hinton - [Read her blog post about how OLED screens work](http://meow.noopkat.com/oled-js/)!
 
@@ -15,26 +15,43 @@ OLED screens are really cool - now you can control them with JavaScript!
 
 ## Install
 
+Raspberry Pi allows for software I2C. To enable software I2C, add `dtoverlay=i2c-gpio,bus=3` to `/boot.config.txt`. The software I2C would be available on `bus` no `3` 
+where the `SDA` is on pin `GPIO23`/`BCM 16` and `SCK` is on pun `GPIO24`/`BCM 18`. 
+
 If you haven't already, install [NodeJS](http://nodejs.org/).
 
 `npm install oled-i2c-bus`
 
+For `SH1106`, if you get an error:
+```
+"Error: , Remote I/O error"
+```
+
+You might have to lower the baudrate by adding the following line to `/boot/config.txt` and rebooting the Pi
+```
+dtparam=i2c_baudrate=10000
+```
+
+This is a known issue with Raspberry Pi as noted in [Raspberry Pi I2C hardware bug](https://github.com/fivdi/i2c-bus/issues/36). Alternatively, use software I2C.
+
 ## I2C screens
-Hook up I2C compatible oled to the Raspberry Pi. Pins: SDL and SCL
+Hook up I2C compatible oled to the Raspberry Pi. Pins: SDA and SCL
 
 ### I2C example
 
 ```javascript
-var i2c = require('i2c-bus'),
-  i2cBus = i2c.openSync(1),
-  oled = require('oled-i2c-bus');
+var i2c = require('i2c-bus');
+var oled = require('oled-i2c-bus');
 
 var opts = {
   width: 128,
   height: 64,
-  address: 0x3D
+  address: 0x3D,
+  bus: 1,
+  driver:"SSD1306"
 };
 
+var i2cbus = i2c.openSync(opts.bus)
 var oled = new oled(i2cBus, opts);
 
 // do cool oled things here
@@ -276,10 +293,76 @@ oled.setCursor(1, 1);
 oled.writeString(font, 1, 'Cats and dogs are really cool animals, you know.', 1, true);
 ```
 
+Checkout https://www.npmjs.com/package/oled-font-pack for all-in-one font package.
+
 ### update
 Sends the entire buffer in its current state to the oled display, effectively syncing the two. This method generally does not need to be called, unless you're messing around with the framebuffer manually before you're ready to sync with the display. It's also needed if you're choosing not to draw on the screen immediately with the built in methods.
 
 Usage:
 ```javascript
 oled.update();
+```
+
+### battery  
+Draw a battery level in percentage indicator. This method allows for up to 4 different states of the battery:    
+- 0 bar : battery < 10%    
+- 1 bar : 10% >= battery < 40%  
+- 2 bar : 40% >= battery < 70%  
+- 3 bar : battery >= 70%    
+  
+Arguments:
+* int **x** - start column    
+* int **y** - start row  
+* int **percentage** - battery level percentage  
+
+usage:
+```javascript
+// args: (x,y,percentage)
+oled.battery(1,1,20);
+```  
+
+### bluetooth  
+Draw a bluetooth icon
+  
+usage:
+```javascript
+//args: (x,y)
+oled.bluetooth(1,1);  
+```
+  
+### wifi  
+Draw a WiFi signal strength in percentage indicator. This method allows for up to 4 different signal  strength of the WiFi signal:    
+- 0 bar : signal < 10%    
+- 1 bar : 10% >= signal < 40%  
+- 2 bar : 40% >= signal < 70%  
+- 3 bar : signal >= 70%    
+  
+Arguments:
+* int **x** - start column    
+* int **y** - start row  
+* int **percentage** - signal strength in percentage  
+
+usage:
+```javascript
+// args: (x,y,percentage)
+oled.wifi(1,1,20);
+``` 
+
+### image  
+A wrapper for `drawRGBAImage` that supports a fix animation. The animation always start from `x=1` and `y=1`. 
+
+Arguments:
+* int **x** - start column (ignored on `animation = true`)  
+* int **y** - start row (ignored on `animation=true`)  
+* string **image** - full path to the image or the filename of the image in the `resources` folder   
+* object **font** - font to draw "error" message  
+* boolean **clear** - clear the display before the draw  
+* boolean **reset** - stop all animations  
+* boolean **animated** - enable/disable animation  
+* boolean **wrapping** - enable/disable of the error message wrapping  
+
+usage:
+```javascript
+var font = require('oled-font-pack')
+oled.image(1,1,'rpi-frambuesa.png',font.oled_5x7,true,false,false,true);
 ```
